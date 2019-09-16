@@ -51,7 +51,7 @@ func main()  {
 	dimensionsSec := dh.GetAllSupervisors()
 	for key, value := range dimensionsSec {
 		fmt.Println(key)
-		fmt.Println(value)
+		fmt.Println(value.ToSlice())
 		_, ok := allMetricNames[key]
 		if !ok {
 			allMetricNames[key] = value
@@ -111,11 +111,13 @@ func main()  {
 								if !ok {
 									//if metric is new
 									allMetricNames[metricName] = keys
+									dh.CreateOrUpdateSupervisor(metricName, allMetricNames[metricName])
 								} else {
 
 									//if there is new labels in the metric
 									if !allMetricNames[metricName].Equal(keys) {
 										allMetricNames[metricName] = allMetricNames[metricName].Union(keys)
+										dh.CreateOrUpdateSupervisor(metricName, allMetricNames[metricName])
 									}
 								}
 							}
@@ -126,10 +128,10 @@ func main()  {
 						fmt.Println("no cap")
 					}
 
-					for key, value := range allMetricNames {
-						fmt.Println(key)
-						fmt.Println(value)
-					}
+					//for key, value := range allMetricNames {
+					//	fmt.Println(key)
+					//	fmt.Println(value)
+					//}
 
 				}
 			}
