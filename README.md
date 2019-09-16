@@ -21,7 +21,7 @@ DRUID_API_SERVER=http://127.0.0.1:8888
 
 support limit control per second
 
-Currently cluster mode is not support, every instance is able to config druid supervisor.
+Currently cluster mode is not supported, every instance will config druid supervisor.
 
 If cluster mode is finished, there will be only one instance which will config the supervisors.
 Other instances will run in simple mode to save cpu cost.
