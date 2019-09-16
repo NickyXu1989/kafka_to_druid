@@ -8,16 +8,17 @@ import (
 
 type TokenBucket struct {
 	interval time.Duration
-	capacity int64
-	availability int64
+	capacity int
+	availability int
+	limitPerSec int
 	ticker *time.Ticker
 	tokenMutex *sync.Mutex
 
 }
 
 
-func NewTokenBucket(interval time.Duration, capacity int64) *TokenBucket {
-	if interval < 0 {
+func NewTokenBucket(limit int, capacity int) *TokenBucket {
+	if limit < 0 {
 		panic(fmt.Sprintf("interval < 0"))
 	}
 
@@ -26,10 +27,11 @@ func NewTokenBucket(interval time.Duration, capacity int64) *TokenBucket {
 	}
 
 	tb := &TokenBucket{
-		interval: interval,
+		interval: time.Second,
 		capacity: capacity,
 		availability: capacity,
-		ticker: time.NewTicker(interval),
+		limitPerSec: limit,
+		ticker: time.NewTicker(time.Second),
 		tokenMutex: &sync.Mutex{},
 	}
 
@@ -43,13 +45,16 @@ func (tb *TokenBucket) runDaemon() {
 	for range tb.ticker.C {
 		tb.tokenMutex.Lock()
 		if tb.availability < tb.capacity {
-			tb.availability ++
+			tb.availability = tb.availability + tb.limitPerSec
+			if tb.availability > tb.capacity{
+				tb.availability = tb.capacity
+			}
 		}
 		tb.tokenMutex.Unlock()
 	}
 }
 
-func (tb *TokenBucket) Take (need int64) bool{
+func (tb *TokenBucket) Take (need int) bool{
 	tb.tokenMutex.Lock()
 	defer tb.tokenMutex.Unlock()
 	if need < tb.availability {

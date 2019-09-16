@@ -61,7 +61,7 @@ func main()  {
 
 	//limiter
 	limitTimer := time.NewTicker(time.Second)
-	tb := tools.NewTokenBucket(time.Second/1000, 1000)
+	tb := tools.NewTokenBucket(config.kafkaLimitPerSec, config.kafkaLimitPerSec)
 
 
 	//kafka producer
@@ -91,13 +91,15 @@ func main()  {
 				select {
 				case <-limitTimer.C:
 					if tb.Take(10) {
-						for i := 0; i < 100; i++ {
+						for i := 0; i < 10; i++ {
 							//fmt.Println(i)
 							var consumerMsg= <-pc.Messages()
 							//flatten the message to a json
 							metricName, _, keys := tools.Flattener(consumerMsg.Value)
+							//metricName, _, _ := tools.Flattener(consumerMsg.Value)
 
-							// to see whether the metric is in local metricNames
+							//to see whether the metric is in local metricNames
+
 							if isMaster {
 								_, ok := allMetricNames[metricName]
 								if !ok {
@@ -111,10 +113,11 @@ func main()  {
 										fmt.Println(allMetricNames[metricName])
 										fmt.Println(keys)
 										allMetricNames[metricName] = allMetricNames[metricName].Union(keys)
-										dh.CreateOrUpdateSupervisor(metricName, allMetricNames[metricName],"10.0.0.10:9092")
+											dh.CreateOrUpdateSupervisor(metricName, allMetricNames[metricName],"10.0.0.10:9092")
 									}
 								}
 							}
+
 
 							//produce msg to kafka
 							producerMsg := &sarama.ProducerMessage{
@@ -127,7 +130,7 @@ func main()  {
 							select {
 								case suc := <-kafkaProducer.Successes():
 									fmt.Println("suc")
-									fmt.Println(suc.Value)
+									fmt.Println(suc.Offset)
 								case fail := <-kafkaProducer.Errors():
 									fmt.Println(fail.Err.Error())
 							}

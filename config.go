@@ -32,7 +32,7 @@ type Config struct {
 	//kafka topic
 	kafkaTopic string
 	//kafka batch num per second
-	kafkaBatchNumMessages int32
+	kafkaLimitPerSec int
 
 
 	//druid configs
@@ -56,7 +56,7 @@ func init () {
 
 	config.kafkaBrokerList = []string {"127.0.0.1:9092"}
 	config.kafkaTopic = "test"
-	config.kafkaBatchNumMessages = 10000
+	config.kafkaLimitPerSec = 10000
 
 	config.druidApiServer = "http://127.0.0.1:8888"
 
@@ -101,12 +101,12 @@ func init () {
 		config.kafkaTopic = value
 	}
 
-	if value := os.Getenv("KAFKA_BATCH_NUM_MESSAGES"); value != "" {
+	if value := os.Getenv("KAFKA_LIMIT_PER_SEC"); value != "" {
 		n, err := strconv.ParseInt(value, 10, 32)
 		if err != nil {
 			panic(err)
 		}
-		config.kafkaBatchNumMessages = int32(n)
+		config.kafkaLimitPerSec = int(n)
 	}
 
 
