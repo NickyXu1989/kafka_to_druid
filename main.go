@@ -111,13 +111,15 @@ func main()  {
 								if !ok {
 									//if metric is new
 									allMetricNames[metricName] = keys
-									dh.CreateOrUpdateSupervisor(metricName, allMetricNames[metricName])
+									dh.CreateOrUpdateSupervisor(metricName, allMetricNames[metricName], "10.0.0.10:9092")
 								} else {
 
-									//if there is new labels in the metric
-									if !allMetricNames[metricName].Equal(keys) {
+									//if there are new labels in the metric
+									if !keys.IsSubset(allMetricNames[metricName]) {
+										fmt.Println(allMetricNames[metricName])
+										fmt.Println(keys)
 										allMetricNames[metricName] = allMetricNames[metricName].Union(keys)
-										dh.CreateOrUpdateSupervisor(metricName, allMetricNames[metricName])
+										dh.CreateOrUpdateSupervisor(metricName, allMetricNames[metricName],"10.0.0.10:9092")
 									}
 								}
 							}

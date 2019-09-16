@@ -3,6 +3,8 @@ package druid
 import (
 	"encoding/json"
 	"fmt"
+
+	//"fmt"
 	mapset "github.com/deckarep/golang-set"
 	"io/ioutil"
 	"kafka-to-druid/druid/druidAllSupervisors"
@@ -114,7 +116,7 @@ func (dh *DruidHandler) CreateOrUpdateSupervisor(supervisorName string, labels m
 	dataSchema := druidCreateOrUpdateSupervisor.DataSchema{
 		DataSource: supervisorName,
 		Parser: parser,
-		MetricsSpec: append([]druidCreateOrUpdateSupervisor.MetricsSpec, metricsSpec),
+		MetricsSpec: append([]druidCreateOrUpdateSupervisor.MetricsSpec{}, metricsSpec),
 		GranularitySpec: granularitySpec,
 	}
 
@@ -142,6 +144,10 @@ func (dh *DruidHandler) CreateOrUpdateSupervisor(supervisorName string, labels m
 		TuningConfig: tuningConfig,
 		IoConfig: ioConfig,
 	}
+
+
+	tmp, _ := json.Marshal(payload)
+	fmt.Println(string(tmp))
 
 
 
