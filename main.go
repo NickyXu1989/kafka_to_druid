@@ -59,18 +59,16 @@ func main()  {
 	}
 
 
-	//for key, value := range allMetricNames {
-	//	fmt.Println(key)
-	//	fmt.Println(value)
-	//}
-	//os.Exit(0)
-
-
 	//limiter
 	limitTimer := time.NewTicker(time.Second)
 	tb := tools.NewTokenBucket(time.Second/1000, 1000)
 
 
+	//kafka producer
+	kafkaProducer := GetKafkaProducer()
+
+
+	//kafka consumer
 	kafkaConsumer := GetKafkaConsumer()
 	//get all the partitions of the topic
 	partitionList, err := kafkaConsumer.Partitions(config.kafkaTopic)
@@ -95,17 +93,11 @@ func main()  {
 					if tb.Take(10) {
 						for i := 0; i < 100; i++ {
 							//fmt.Println(i)
-							var msg= <-pc.Messages()
-							//metricName, json, keys := tools.Flattener(msg.Value)
-							metricName, _, keys := tools.Flattener(msg.Value)
-							//if metricName == "node_netstat_Udp_OutDatagrams" {
-							//	fmt.Println(metricName)
-							//	fmt.Println(json)
-							//	fmt.Println(keys)
-							//}
+							var consumerMsg= <-pc.Messages()
+							//flatten the message to a json
+							metricName, _, keys := tools.Flattener(consumerMsg.Value)
 
-
-							//master node to see whether the metirc is in local metricNames
+							// to see whether the metric is in local metricNames
 							if isMaster {
 								_, ok := allMetricNames[metricName]
 								if !ok {
@@ -123,6 +115,24 @@ func main()  {
 									}
 								}
 							}
+
+							//produce msg to kafka
+							producerMsg := &sarama.ProducerMessage{
+								Topic: metricName,
+								Key: sarama.StringEncoder(metricName),
+								Value: sarama.ByteEncoder(consumerMsg.Value),
+							}
+							kafkaProducer.Input() <- producerMsg
+
+							select {
+								case suc := <-kafkaProducer.Successes():
+									fmt.Println("suc")
+									fmt.Println(suc.Value)
+								case fail := <-kafkaProducer.Errors():
+									fmt.Println(fail.Err.Error())
+							}
+
+
 
 
 						}

@@ -128,14 +128,14 @@ func GetRedisClient() *redis.Client {
 
 }
 
-func GetKafkaProducer() sarama.SyncProducer {
+func GetKafkaProducer() sarama.AsyncProducer {
 	kafkaConfig := sarama.NewConfig()
 	kafkaConfig.Producer.RequiredAcks = sarama.WaitForAll
 	kafkaConfig.Producer.Partitioner = sarama.NewRandomPartitioner
 	kafkaConfig.Producer.Return.Successes = true
 	kafkaConfig.Producer.Return.Errors = true
 	//kafkaConfig.Version = sarama.V0_11_0_2
-	producer, err := sarama.NewSyncProducer(config.kafkaBrokerList, kafkaConfig)
+	producer, err := sarama.NewAsyncProducer(config.kafkaBrokerList, kafkaConfig)
 	if err != nil {
 		panic(err)
 	}

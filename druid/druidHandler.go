@@ -1,6 +1,7 @@
 package druid
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
@@ -63,6 +64,9 @@ func (dh *DruidHandler) GetAllSupervisors() (result map[string]mapset.Set) {
 
 
 func (dh *DruidHandler) CreateOrUpdateSupervisor(supervisorName string, labels mapset.Set, bootstrapServers string) {
+
+	url := "/druid/indexer/v1/supervisor"
+
 	tmpSet := mapset.NewSet()
 	tmpSet.Add("value")
 	tmpSet.Add("timestamp")
@@ -100,7 +104,7 @@ func (dh *DruidHandler) CreateOrUpdateSupervisor(supervisorName string, labels m
 	}
 
 	metricsSpec := druidCreateOrUpdateSupervisor.MetricsSpec{
-		Type: "doublesum",
+		Type: "doubleSum",
 		Name: "value",
 		FieldName: "value",
 	}
@@ -146,11 +150,17 @@ func (dh *DruidHandler) CreateOrUpdateSupervisor(supervisorName string, labels m
 	}
 
 
-	tmp, _ := json.Marshal(payload)
-	fmt.Println(string(tmp))
 
-
-
-
-
+	rawJson, _ := json.Marshal(payload)
+	fmt.Println(string(rawJson))
+	req, _ := http.NewRequest("POST", dh.apiServer + url, bytes.NewBuffer(rawJson))
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println("response Body:", string(body))
 }
